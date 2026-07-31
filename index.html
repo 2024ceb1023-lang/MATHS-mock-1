@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Datum — GATE CE 2027 Practice</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg: #EEF0E9;
+  --bg-alt: #E4E7DD;
+  --surface: #FFFFFF;
+  --ink: #1E2A28;
+  --ink-soft: #4B5A56;
+  --primary: #1F4B49;
+  --primary-light: #2F6864;
+  --accent: #C17F3E;
+  --accent-soft: #F1DDBC;
+  --alert: #A94E3C;
+  --alert-soft: #F3DED8;
+  --good: #4C7A5E;
+  --good-soft: #DCEADF;
+  --border: #D5D9CC;
+  --line-grid: rgba(31,75,73,0.055);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--bg);
+  background-image:
+    linear-gradient(var(--line-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line-grid) 1px, transparent 1px);
+  background-size: 28px 28px;
+  color:var(--ink);
+  font-family:'IBM Plex Sans', sans-serif;
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4,.display{
+  font-family:'Fraunces', serif;
+  font-weight:600;
+  letter-spacing:-0.01em;
+}
+.mono{font-family:'IBM Plex Mono', monospace;}
+a{color:inherit;}
+button{font-family:inherit;}
+
+/* Layout */
+.app{display:flex; min-height:100vh;}
+.sidebar{
+  width:250px; flex-shrink:0;
+  background:var(--primary);
+  color:#EDEFE6;
+  padding:28px 22px;
+  position:sticky; top:0; height:100vh;
+  overflow-y:auto;
+}
+.sidebar .brand{
+  font-family:'Fraunces', serif;
+  font-size:1.5rem;
+  font-weight:700;
+  color:#fff;
+  display:flex; align-items:baseline; gap:8px;
+  margin-bottom:4px;
+}
+.sidebar .brand .mark{
+  color:var(--accent-soft);
+  font-family:'IBM Plex Mono', monospace;
+  font-size:0.75rem;
+  font-weight:500;
+}
+.sidebar .tagline{
+  font-size:0.78rem;
+  color:#B9C7C0;
+  margin-bottom:30px;
+  line-height:1.5;
+}
+.nav-group{margin-bottom:22px;}
+.nav-label{
+  font-family:'IBM Plex Mono', monospace;
+  font-size:0.68rem;
+  text-transform:uppercase;
+  letter-spacing:0.08em;
+  color:#8FA69E;
+  margin-bottom:8px;
+  padding-left:2px;
+}
+.nav-item{
+  display:flex; align-items:center; gap:10px;
+  padding:9px 10px;
+  border-radius:7px;
+  font-size:0.92rem;
+  color:#DCE6E1;
+  cursor:pointer;
+  margin-bottom:2px;
+  transition:background .15s ease, color .15s ease;
+  border-left:3px solid transparent;
+}
+.nav-item:hover{background:rgba(255,255,255,0.08);}
+.nav-item.active{
+  background:rgba(255,255,255,0.12);
+  color:#fff;
+  border-left:3px solid var(--accent);
+  font-weight:500;
+}
+.nav-item .dot{
+  width:6px;height:6px;border-radius:50%;
+  background:#5C7B75; flex-shrink:0;
+}
+.nav-item.active .dot{background:var(--accent);}
+
+.main{flex:1; min-width:0; padding:44px 56px; max-width:1180px;}
+.view{display:none;}
+.view.active{display:block; animation:fadein .25s ease;}
+@keyframes fadein{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);}}
+
+/* Home */
+.hero{
+  padding:38px 40px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:14px;
+  margin-bottom:34px;
+  position:relative;
+  overflow:hidden;
+}
+.hero::after{
+  content:"";
+  position:absolute; right:-40px; top:-40px;
+  width:220px; height:220px;
+  border-radius:50%;
+  background:radial-gradient(circle, var(--accent-soft) 0%, transparent 70%);
+  opacity:0.7;
+}
+.hero .eyebrow{
+  font-family:'IBM Plex Mono', monospace;
+  font-size:0.75rem; letter-spacing:0.08em; text-transform:uppercase;
+  color:var(--primary-light); font-weight:600; margin-bottom:10px;
+}
+.hero h1{font-size:2.3rem; margin:0 0 10px 0; color:var(--primary); position:relative;}
+.hero p{max-width:640px; color:var(--ink-soft); line-height:1.6; font-size:1.02rem; position:relative;}
+
+.status-banner{
+  background:var(--accent-soft);
+  border:1px solid #E0BF8C;
+  border-radius:10px;
+  padding:16px 20px;
+  margin-bottom:30px;
+  font-size:0.9rem;
+  line-height:1.55;
+  color:#5A3E1C;
+}
+.status-banner strong{color:#3D2A10;}
+
+.card-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:18px; margin-bottom:36px;}
+.section-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:22px;
+  cursor:pointer;
+  transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+}
+.section-card:hover{transform:translateY(-3px); box-shadow:0 10px 28px rgba(31,75,73,0.12); border-color:var(--primary-light);}
+.section-card .tag{
+  font-family:'IBM Plex Mono', monospace;
+  font-size:0.68rem; text-transform:uppercase; letter-spacing:0.07em;
+  color:var(--accent); font-weight:600; margin-bottom:10px; display:block;
+}
+.section-card h3{margin:0 0 8px 0; font-size:1.15rem; color:var(--primary);}
+.section-card p{margin:0; font-size:0.86rem; color:var(--ink-soft); line-height:1.5;}
+
+.stat-row{display:flex; gap:28px; flex-wrap:wrap; margin:22px 0 0 0;}
+.stat{border-left:3px solid var(--accent); padding-left:12px;}
+.stat .num{font-family:'Fraunces', serif; font-size:1.6rem; font-weight:600; color:var(--primary); line-height:1;}
+.stat .label{font-size:0.76rem; color:var(--ink-soft); margin-top:2px;}
+
+/* Page headers */
+.page-head{margin-bottom:26px;}
+.page-head h2{font-size:1.7rem; color:var(--primary); margin:0 0 6px 0;}
+.page-head .sub{color:var(--ink-soft); font-size:0.93rem; max-width:680px; line-height:1.5;}
+
+.legend{display:flex; gap:14px; flex-wrap:wrap; margin:16px 0 26px 0;}
+.legend-item{display:flex; align-items:center; gap:7px; font-size:0.8rem; color:var(--ink-soft);}
+.legend-chip{
+  font-family:'IBM Plex Mono', monospace; font-size:0.66rem; font-weight:600;
+  padding:2px 8px; border-radius:20px; text-transform:uppercase; letter-spacing:0.03em;
+}
+.chip-pyq{background:var(--good-soft); color:#2E5A41;}
+.chip-free{background:#DCE7F0; color:#2A4F6B;}
+.chip-gen{background:#EEE4F2; color:#5B3B6B;}
+
+/* Topic accordion */
+.topic-block{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:12px;
+  margin-bottom:16px;
+  overflow:hidden;
+}
+.topic-header{
+  padding:16px 20px;
+  display:flex; align-items:center; justify-content:space-between;
+  cursor:pointer;
+  user-select:none;
+}
+.topic-header:hover{background:var(--bg-alt);}
+.topic-header h4{margin:0; font-size:1.05rem; color:var(--primary);}
+.topic-header .count{font-size:0.8rem; color:var(--ink-soft); font-family:'IBM Plex Mono',monospace;}
+.topic-body{display:none; padding:0 20px 20px 20px; border-top:1px solid var(--border);}
+.topic-body.open{display:block;}
+
+.q-card{
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:16px 18px;
+  margin-top:14px;
+  background:#FCFCFA;
+}
+.q-meta{display:flex; gap:8px; align-items:center; margin-bottom:10px; flex-wrap:wrap;}
+.q-text{font-size:0.96rem; line-height:1.55; margin-bottom:12px;}
+.options{list-style:none; padding:0; margin:0 0 12px 0; display:grid; gap:7px;}
+.options li{
+  padding:8px 12px; border:1px solid var(--border); border-radius:7px;
+  font-size:0.88rem; background:#fff;
+}
+.options li.correct{border-color:var(--good); background:var(--good-soft);}
+details.sol{margin-top:6px;}
+details.sol summary{
+  cursor:pointer; font-size:0.83rem; font-weight:600; color:var(--primary-light);
+  font-family:'IBM Plex Mono', monospace; list-style:none;
+}
+details.sol summary::-webkit-details-marker{display:none;}
+details.sol summary::before{content:"▸ "; }
+details.sol[open] summary::before{content:"▾ ";}
+.sol-body{
+  margin-top:10px; padding:12px 14px; background:var(--bg-alt); border-radius:8px;
+  font-size:0.87rem; line-height:1.65; white-space:pre-line;
+}
+
+/* Mock test */
+.mock-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:18px;}
+.mock-card{
+  background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px;
+}
+.mock-card h4{margin:0 0 6px 0; color:var(--primary); font-size:1.05rem;}
+.mock-card .meta{font-size:0.8rem; color:var(--ink-soft); margin-bottom:14px; line-height:1.5;}
+.btn{
+  display:inline-block; padding:9px 16px; border-radius:8px; border:none;
+  background:var(--primary); color:#fff; font-size:0.85rem; font-weight:600;
+  cursor:pointer; transition:background .15s ease;
+}
+.btn:hover{background:var(--primary-light);}
+.btn.ghost{background:transparent; color:var(--primary); border:1px solid var(--primary);}
+.btn.locked{background:#C9CFC3; color:#6B756B; cursor:not-allowed;}
+
+/* Test runner */
+.test-runner{background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:0; overflow:hidden;}
+.test-bar{display:flex; justify-content:space-between; align-items:center; padding:16px 22px; background:var(--primary); color:#fff;}
+.test-bar .timer{font-family:'IBM Plex Mono',monospace; font-size:1.1rem; background:rgba(255,255,255,0.14); padding:6px 14px; border-radius:8px;}
+.test-body{padding:26px;}
+.test-q-nav{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:20px;}
+.test-q-nav button{
+  width:34px; height:34px; border-radius:7px; border:1px solid var(--border); background:#fff;
+  font-family:'IBM Plex Mono',monospace; font-size:0.78rem; cursor:pointer;
+}
+.test-q-nav button.answered{background:var(--good-soft); border-color:var(--good);}
+.test-q-nav button.current{outline:2px solid var(--accent); outline-offset:1px;}
+.footer-note{margin-top:60px; padding-top:22px; border-top:1px solid var(--border); font-size:0.78rem; color:var(--ink-soft); line-height:1.6;}
+
+@media(max-width:880px){
+  .app{flex-direction:column;}
+  .sidebar{width:100%; height:auto; position:relative; padding:18px;}
+  .main{padding:26px 18px;}
+  .hero{padding:26px;}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <nav class="sidebar">
+    <div class="brand">Datum <span class="mark">GATE·CE·27</span></div>
+    <div class="tagline">A self-built practice space for GATE &amp; ESE Civil Engineering.</div>
+
+    <div class="nav-group">
+      <div class="nav-label">Overview</div>
+      <div class="nav-item active" data-view="home"><span class="dot"></span>Home</div>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-label">Practice</div>
+      <div class="nav-item" data-view="topicwise"><span class="dot"></span>Topic-wise bank</div>
+      <div class="nav-item" data-view="subjectwise"><span class="dot"></span>Subject-wise sets</div>
+      <div class="nav-item" data-view="additional"><span class="dot"></span>Additional practice</div>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-label">Simulate</div>
+      <div class="nav-item" data-view="mocks"><span class="dot"></span>Mock test series</div>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-label">This build</div>
+      <div class="nav-item" data-view="roadmap"><span class="dot"></span>Build roadmap</div>
+    </div>
+  </nav>
+
+  <main class="main">
+
+    <!-- HOME -->
+    <section class="view active" id="view-home">
+      <div class="hero">
+        <div class="eyebrow">Session 1 of N — Engineering Mathematics live</div>
+        <h1>Everything you need, organized like the syllabus, built one honest subject at a time.</h1>
+        <p>This is your GATE CE 2027 practice hub — topic-wise questions, subject-wise sets, extra free-source practice, and full mock tests, all mapped to the official IIT Madras syllabus. Built incrementally so every question you see is one I actually stand behind.</p>
+        <div class="stat-row">
+          <div class="stat"><div class="num">6</div><div class="label">Math topics covered so far</div></div>
+          <div class="stat"><div class="num">1</div><div class="label">Mock test ready</div></div>
+          <div class="stat"><div class="num">8</div><div class="label">Subjects in the full syllabus</div></div>
+        </div>
+      </div>
+
+      <div class="status-banner">
+        <strong>Where things stand:</strong> This first build fully populates <strong>Section 1 — Engineering Mathematics</strong> (all 6 topics), plus a matching subject-wise set, an additional-practice set, and <strong>Mock Test 1</strong> (Math + General Aptitude weighted, 30 questions). The remaining 7 subjects — Structural, Geotechnical, Water Resources, Environmental, Transportation, Geomatics, Construction Materials &amp; Management — and Mock Tests 2–6 come in the next sessions. See <strong>Build roadmap</strong> in the sidebar for the exact plan.
+      </div>
+
+      <div class="card-grid">
+        <div class="section-card" data-view="topicwise">
+          <span class="tag">Browse by topic</span>
+          <h3>Topic-wise bank</h3>
+          <p>Questions grouped exactly by syllabus topic, each with a full worked solution.</p>
+        </div>
+        <div class="section-card" data-view="subjectwise">
+          <span class="tag">Integrated practice</span>
+          <h3>Subject-wise sets</h3>
+          <p>All topics of a subject mixed together, the way they'll actually appear on exam day.</p>
+        </div>
+        <div class="section-card" data-view="additional">
+          <span class="tag">Beyond the PYQs</span>
+          <h3>Additional practice</h3>
+          <p>Free-source-style and originally written questions, clearly separated from verified PYQs.</p>
+        </div>
+        <div class="section-card" data-view="mocks">
+          <span class="tag">Full-length</span>
+          <h3>Mock test series</h3>
+          <p>Timed, GATE-pattern tests with negative marking and a score breakdown at the end.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- TOPIC WISE -->
+    <section class="view" id="view-topicwise">
+      <div class="page-head">
+        <h2>Topic-wise bank — Engineering Mathematics</h2>
+        <div class="sub">Organized exactly as Section 1 of the syllabus. Every question is tagged by source so you know how much to trust it.</div>
+      </div>
+      <div class="legend">
+        <div class="legend-item"><span class="legend-chip chip-pyq">PYQ</span> Verified past-year question (year shown)</div>
+        <div class="legend-item"><span class="legend-chip chip-free">Recreated</span> Close paraphrase of a known past-year question, reconstructed from memory — verify against the original if it matters to you</div>
+        <div class="legend-item"><span class="legend-chip chip-gen">Original</span> Newly written, in GATE style and difficulty</div>
+      </div>
+      <div id="topicwise-container"></div>
+    </section>
+
+    <!-- SUBJECT WISE -->
+    <section class="view" id="view-subjectwise">
+      <div class="page-head">
+        <h2>Subject-wise combined sets</h2>
+        <div class="sub">All topics of a subject shuffled together for integrated practice — this is how GATE actually mixes questions within a subject.</div>
+      </div>
+      <div id="subjectwise-container"></div>
+    </section>
+
+    <!-- ADDITIONAL -->
+    <section class="view" id="view-additional">
+      <div class="page-head">
+        <h2>Additional practice questions</h2>
+        <div class="sub">Modeled on the style of free/open resources (NPTEL assignment-style questions, open community test series) plus originals written to fill gaps. None of these are official PYQs — treat them as extra reps, not history.</div>
+      </div>
+      <div id="additional-container"></div>
+    </section>
+
+    <!-- MOCKS -->
+    <section class="view" id="view-mocks">
+      <div class="page-head">
+        <h2>Mock test series</h2>
+        <div class="sub">Full GATE pattern: 65 questions, 100 marks, 1-mark and 2-mark questions, 1/3 negative marking on 1-mark MCQs and 2/3 on 2-mark MCQs (NAT questions have no negative marking). Mock 1 is ready now; Mocks 2–6 arrive as later subjects are built.</div>
+      </div>
+      <div class="mock-grid" id="mocks-container"></div>
+    </section>
+
+    <!-- ROADMAP -->
+    <section class="view" id="view-roadmap">
+      <div class="page-head">
+        <h2>Build roadmap</h2>
+        <div class="sub">The honest plan for finishing this, session by session.</div>
+      </div>
+      <div class="topic-block" style="padding:22px 24px;">
+        <h4 style="margin-top:0;">Session 1 — done (this file)</h4>
+        <p style="color:var(--ink-soft); font-size:0.9rem; line-height:1.6;">Full app shell + navigation + design system. Section 1, Engineering Mathematics: all 6 topics with worked solutions, subject-wise set, additional-practice set, and Mock Test 1 (Math + General Aptitude, 30 Qs).</p>
+        <h4>Session 2 — next message</h4>
+        <p style="color:var(--ink-soft); font-size:0.9rem; line-height:1.6;">Section 2 (Structural Engineering) and Section 3 (Geotechnical Engineering), fully populated, plus Mock Test 2.</p>
+        <h4>Session 3</h4>
+        <p style="color:var(--ink-soft); font-size:0.9rem; line-height:1.6;">Section 4 (Water Resources) and Section 5 (Environmental), plus Mock Test 3.</p>
+        <h4>Session 4</h4>
+        <p style="color:var(--ink-soft); font-size:0.9rem; line-height:1.6;">Section 6 (Transportation) and Section 7 (Geomatics), plus Mock Test 4.</p>
+        <h4>Session 5</h4>
+        <p style="color:var(--ink-soft); font-size:0.9rem; line-height:1.6;">Section 8 (Construction Materials &amp; Management), General Aptitude bank, plus Mock Tests 5 and 6.</p>
+        <h4>Session 6 (if you want it)</h4>
+        <p style="color:var(--ink-soft); font-size:0.9rem; line-height:1.6;">Mocks 7–10 and any topic top-ups you flag as thin after using the first build.</p>
+      </div>
+      <div class="footer-note">
+        A note on accuracy: for older/less common GATE questions, my recall can be imperfect even when a question is genuinely from a past paper — I've marked anything I'm not fully certain is verbatim as "Recreated" rather than "PYQ." If you want maximum trust in a specific year, cross-check against the official GATE question papers (available free on the GATE portal) or a source like <span class="mono">gate.iitm.ac.in</span>.
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
