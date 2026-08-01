@@ -2,8 +2,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
   // ---------- Navigation ----------
-  const navItems = document.querySelectorAll('.nav-item, .section-card');
-  navItems.forEach(el => {
+  document.querySelectorAll('.nav-item, .section-card').forEach(el => {
     el.addEventListener('click', () => {
       const view = el.getAttribute('data-view');
       if (!view) return;
@@ -14,8 +13,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  const TAG_LABEL = {pyq:'PYQ', recreated:'Recreated', gen:'Original', free:'Free-source'};
-  const TAG_CLASS = {pyq:'chip-pyq', recreated:'chip-free', gen:'chip-gen', free:'chip-free'};
+  const TAG_LABEL = {gen:'Original', free:'Free-source style'};
+  const TAG_CLASS = {gen:'chip-gen', free:'chip-free'};
+  let qUidCounter = 0;
 
   function chip(tag, extra){
     const label = TAG_LABEL[tag] || tag;
@@ -23,20 +23,39 @@ document.addEventListener('DOMContentLoaded', () => {
     return `<span class="legend-chip ${cls}">${label}</span>${extra ? `<span class="mono" style="font-size:0.75rem;color:var(--ink-soft);">${extra}</span>` : ''}`;
   }
 
-  function renderQuestion(qd, idx){
-    const optsHtml = qd.options.map((o,i) => `<li class="${i===qd.correct?'correct':''}">${String.fromCharCode(65+i)}. ${o}</li>`).join('');
+  // Click-to-reveal question card. Options are inert until clicked; clicking one
+  // locks the question, marks it correct/incorrect, and reveals the right answer.
+  function renderQuestion(qd){
+    const uid = 'pq' + (qUidCounter++);
+    const optsHtml = qd.options.map((o,i) =>
+      `<li class="mcq-opt" data-uid="${uid}" data-i="${i}">${String.fromCharCode(65+i)}. ${o}</li>`
+    ).join('');
     return `
-      <div class="q-card">
-        <div class="q-meta">${chip(qd.tag, qd.year || qd.source || '')}<span class="mono" style="font-size:0.75rem;color:var(--ink-soft);">Q${idx+1}</span></div>
+      <div class="q-card" id="${uid}" data-correct="${qd.correct}">
+        <div class="q-meta">${chip(qd.tag, qd.source || '')}</div>
         <div class="q-text">${qd.q}</div>
         <ul class="options">${optsHtml}</ul>
         <details class="sol"><summary>Show solution</summary><div class="sol-body">${qd.sol}</div></details>
       </div>`;
   }
 
-  // ---------- Topic-wise ----------
-  const topicContainer = document.getElementById('topicwise-container');
-  window.DATA.TOPICS.forEach(topic => {
+  // Event delegation for practice-mode click-to-reveal options
+  document.addEventListener('click', (e) => {
+    const li = e.target.closest('.mcq-opt');
+    if (!li) return;
+    const card = document.getElementById(li.dataset.uid);
+    if (!card || card.classList.contains('revealed')) return;
+    card.classList.add('revealed');
+    const correctIdx = +card.dataset.correct;
+    const clickedIdx = +li.dataset.i;
+    card.querySelectorAll('.mcq-opt').forEach(opt => {
+      const i = +opt.dataset.i;
+      if (i === correctIdx) opt.classList.add('correct');
+      if (i === clickedIdx && i !== correctIdx) opt.classList.add('incorrect');
+    });
+  });
+
+  function renderTopicBlock(topic){
     const block = document.createElement('div');
     block.className = 'topic-block';
     block.innerHTML = `
@@ -44,78 +63,108 @@ document.addEventListener('DOMContentLoaded', () => {
         <h4>${topic.name}</h4>
         <span class="count">${topic.questions.length} questions</span>
       </div>
-      <div class="topic-body">${topic.questions.map((q,i)=>renderQuestion(q,i)).join('')}</div>`;
+      <div class="topic-body">${topic.questions.map(renderQuestion).join('')}</div>`;
     block.querySelector('.topic-header').addEventListener('click', () => {
       block.querySelector('.topic-body').classList.toggle('open');
     });
-    topicContainer.appendChild(block);
+    return block;
+  }
+
+  // ---------- Topic-wise (grouped by subject) ----------
+  const topicContainer = document.getElementById('topicwise-container');
+  window.DATA.SUBJECTS.forEach(subject => {
+    const heading = document.createElement('h3');
+    heading.style.cssText = 'color:var(--primary); margin:28px 0 12px 0; font-size:1.2rem;';
+    heading.textContent = subject.name;
+    topicContainer.appendChild(heading);
+    subject.topics.forEach(topic => topicContainer.appendChild(renderTopicBlock(topic)));
   });
 
-  // ---------- Subject-wise (Engineering Mathematics combined) ----------
+  // ---------- Subject-wise combined sets ----------
   const subjContainer = document.getElementById('subjectwise-container');
-  const allMathQ = window.DATA.TOPICS.flatMap(t => t.questions.map(q => ({...q, topicName:t.name})));
-  const subjBlock = document.createElement('div');
-  subjBlock.className = 'topic-block';
-  subjBlock.innerHTML = `
-    <div class="topic-header">
-      <h4>Engineering Mathematics — combined set</h4>
-      <span class="count">${allMathQ.length} questions across 6 topics</span>
-    </div>
-    <div class="topic-body open">${allMathQ.map((q,i)=>renderQuestion(q,i)).join('')}</div>`;
-  subjBlock.querySelector('.topic-header').addEventListener('click', () => {
-    subjBlock.querySelector('.topic-body').classList.toggle('open');
+  window.DATA.SUBJECTS.forEach(subject => {
+    const allQ = subject.topics.flatMap(t => t.questions);
+    const block = document.createElement('div');
+    block.className = 'topic-block';
+    block.innerHTML = `
+      <div class="topic-header">
+        <h4>${subject.name} — combined set</h4>
+        <span class="count">${allQ.length} questions across ${subject.topics.length} topics</span>
+      </div>
+      <div class="topic-body">${allQ.map(renderQuestion).join('')}</div>`;
+    block.querySelector('.topic-header').addEventListener('click', () => {
+      block.querySelector('.topic-body').classList.toggle('open');
+    });
+    subjContainer.appendChild(block);
   });
-  subjContainer.appendChild(subjBlock);
 
   // ---------- Additional practice ----------
   const addContainer = document.getElementById('additional-container');
-  addContainer.innerHTML = window.DATA.ADDITIONAL.map((q,i)=>renderQuestion(q,i)).join('');
+  addContainer.innerHTML = window.DATA.ADDITIONAL.map(renderQuestion).join('');
 
   // ---------- Mocks list ----------
   const mocksContainer = document.getElementById('mocks-container');
-  const mockCard = document.createElement('div');
-  mockCard.className = 'mock-card';
-  mockCard.innerHTML = `
-    <h4>${window.DATA.MOCK_1.title}</h4>
-    <div class="meta">${window.DATA.MOCK_1.info}</div>
-    <button class="btn" id="start-mock-1">Start test</button>`;
-  mocksContainer.appendChild(mockCard);
 
-  for (let i = 2; i <= 6; i++){
-    const c = document.createElement('div');
-    c.className = 'mock-card';
-    c.innerHTML = `<h4>Mock Test ${i}</h4><div class="meta">Arrives once the matching subjects are built (see Build roadmap).</div><button class="btn locked" disabled>Not yet built</button>`;
-    mocksContainer.appendChild(c);
+  function mockCardHtml(mock, unlocked){
+    const card = document.createElement('div');
+    card.className = 'mock-card';
+    if (unlocked){
+      card.innerHTML = `<h4>${mock.title}</h4><div class="meta">${mock.info}</div><button class="btn start-mock" data-mock="${mock.id}">Start test</button>`;
+    } else {
+      card.innerHTML = `<h4>${mock.title}</h4><div class="meta">${mock.info}</div><button class="btn locked" disabled>Coming soon</button>`;
+    }
+    return card;
   }
 
-  document.getElementById('start-mock-1').addEventListener('click', startMock1);
+  mocksContainer.appendChild(mockCardHtml(window.DATA.MOCK_1, true));
+  mocksContainer.appendChild(mockCardHtml(window.DATA.MOCK_2, true));
+  const upcomingMocks = [
+    {id:'mock-3', title:'Mock Test 3', info:'Covers Water Resources and Environmental Engineering once those subjects are published.'},
+    {id:'mock-4', title:'Mock Test 4', info:'Covers Transportation and Geomatics Engineering once those subjects are published.'},
+    {id:'mock-5', title:'Mock Test 5', info:'Covers Construction Materials & Management once that subject is published.'},
+    {id:'mock-6', title:'Mock Test 6', info:'A second full-length test spanning all eight subjects, once the full syllabus is published.'}
+  ];
+  upcomingMocks.forEach(m => mocksContainer.appendChild(mockCardHtml(m, false)));
+
+  document.querySelectorAll('.start-mock').forEach(btn => {
+    btn.addEventListener('click', () => startMock(btn.dataset.mock === 'mock-1' ? window.DATA.MOCK_1 : window.DATA.MOCK_2));
+  });
 
   // ---------- Mock test runner ----------
-  function buildMockQuestions(){
-    // Core: 25 one-mark + 30 two-mark, sampled round-robin across the 6 math topics for spread
-    const pool = window.DATA.TOPICS.flatMap(t => t.questions);
-    // shuffle deterministically-ish (simple shuffle, fine for practice purposes)
+  function buildMockQuestions(mock){
+    // Core: 25 one-mark + 30 two-mark, sampled across the relevant subjects' topics
+    let subjectIds;
+    if (mock.id === 'mock-1') subjectIds = ['engineering-mathematics'];
+    else subjectIds = ['structural-engineering', 'geotechnical-engineering'];
+
+    const pool = window.DATA.SUBJECTS
+      .filter(s => subjectIds.includes(s.id))
+      .flatMap(s => s.topics.flatMap(t => t.questions));
+
     const shuffled = [...pool].sort(() => Math.random() - 0.5);
     const core1 = shuffled.slice(0, 25).map(q => ({...q, marks:1}));
     const core2 = shuffled.slice(25, 55).map(q => ({...q, marks:2}));
-    const ga = window.DATA.GA_QUESTIONS;
-    const ga1 = ga.slice(0,5).map(q => ({...q, marks:1}));
-    const ga2 = ga.slice(5,10).map(q => ({...q, marks:2}));
+
+    const gaSlice = mock.gaSlice || [0, 10];
+    const gaPool = window.DATA.GA_QUESTIONS.slice(gaSlice[0], gaSlice[1]);
+    const ga1 = gaPool.slice(0,5).map(q => ({...q, marks:1}));
+    const ga2 = gaPool.slice(5,10).map(q => ({...q, marks:2}));
+
     return [...ga1, ...ga2, ...core1, ...core2];
   }
 
-  function startMock1(){
-    const questions = buildMockQuestions();
+  function startMock(mock){
+    const questions = buildMockQuestions(mock);
     const answers = new Array(questions.length).fill(null);
     let current = 0;
-    let timeLeft = window.DATA.MOCK_1.duration_min * 60;
+    let timeLeft = mock.duration_min * 60;
     let submitted = false;
 
     const mocksView = document.getElementById('view-mocks');
     mocksView.innerHTML = `
       <div class="test-runner">
         <div class="test-bar">
-          <div><strong>${window.DATA.MOCK_1.title}</strong></div>
+          <div><strong>${mock.title}</strong></div>
           <div class="timer" id="mock-timer">--:--</div>
         </div>
         <div class="test-body">
@@ -143,7 +192,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderQ(){
       const qd = questions[current];
       qArea.innerHTML = `
-        <div class="q-meta"><span class="mono" style="font-size:0.78rem;color:var(--ink-soft);">Q${current+1} of ${questions.length} · ${qd.marks} mark${qd.marks>1?'s':''}</span></div>
+        <div class="q-meta"><span class="mono" style="font-size:0.78rem;color:var(--ink-soft);">Question ${current+1} of ${questions.length} · ${qd.marks} mark${qd.marks>1?'s':''}</span></div>
         <div class="q-text" style="font-size:1.05rem;">${qd.q}</div>
         <ul class="options" id="mc-options">
           ${qd.options.map((o,i)=>`<li data-i="${i}" style="cursor:pointer;${answers[current]===i?'border-color:var(--accent);background:var(--accent-soft);':''}">${String.fromCharCode(65+i)}. ${o}</li>`).join('')}
@@ -171,6 +220,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const timerInterval = setInterval(tick, 1000);
     tick();
 
+    // Negative marking: wrong 1-mark MCQ costs 1/3 mark, wrong 2-mark MCQ costs 2/3 mark. No penalty for unattempted.
     function finishTest(){
       if (submitted) return;
       submitted = true;
@@ -179,13 +229,13 @@ document.addEventListener('DOMContentLoaded', () => {
       questions.forEach((qd,i) => {
         if (answers[i] === null){ unattempted++; return; }
         if (answers[i] === qd.correct){ score += qd.marks; correct++; }
-        else { score -= qd.marks/3*(qd.marks===1?1:2); wrong++; }
+        else { score -= (qd.marks === 1 ? (1/3) : (2/3)); wrong++; }
       });
       score = Math.round(score*100)/100;
       const maxScore = questions.reduce((s,q)=>s+q.marks,0);
 
       mocksView.innerHTML = `
-        <div class="page-head"><h2>Mock Test 1 — Results</h2></div>
+        <div class="page-head"><h2>${mock.title} — Results</h2></div>
         <div class="stat-row" style="margin-bottom:30px;">
           <div class="stat"><div class="num">${score}/${maxScore}</div><div class="label">Score</div></div>
           <div class="stat"><div class="num">${correct}</div><div class="label">Correct</div></div>
@@ -206,7 +256,7 @@ document.addEventListener('DOMContentLoaded', () => {
           return `<li style="${style}">${String.fromCharCode(65+oi)}. ${o}${oi===yourAns?' (your answer)':''}</li>`;
         }).join('');
         return `<div class="q-card">
-          <div class="q-meta"><span class="mono" style="font-size:0.75rem;color:${isCorrect?'var(--good)':'var(--alert)'};">Q${i+1} · ${qd.marks} mark${qd.marks>1?'s':''} · ${yourAns===null?'Unattempted':(isCorrect?'Correct':'Wrong')}</span></div>
+          <div class="q-meta"><span class="mono" style="font-size:0.75rem;color:${isCorrect?'var(--good)':'var(--alert)'};">Question ${i+1} · ${qd.marks} mark${qd.marks>1?'s':''} · ${yourAns===null?'Unattempted':(isCorrect?'Correct':'Wrong')}</span></div>
           <div class="q-text">${qd.q}</div>
           <ul class="options">${optsHtml}</ul>
           <details class="sol"><summary>Show solution</summary><div class="sol-body">${qd.sol}</div></details>
